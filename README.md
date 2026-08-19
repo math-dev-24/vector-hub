@@ -1,4 +1,4 @@
-# OCR Pipe
+# Vector Hub
 
 Pipeline Flask permettant d'extraire, corriger, découper, enrichir et
 vectoriser des documents PDF pour un usage RAG.
@@ -17,7 +17,7 @@ isoler les traitements dans un processus dédié, désactiver ce worker et lance
 un second terminal :
 
 ```powershell
-$env:OCR_PIPE_AUTO_WORKER = "0"
+$env:VECTOR_HUB_AUTO_WORKER = "0"
 uv run python -m workers
 ```
 
@@ -45,13 +45,13 @@ $env:FLASK_SECRET_KEY = "une-valeur-secrete"
 SQLite reste la source locale de vérité. Le port de publication accepte des
 adaptateurs Pinecone et Qdrant, sélectionnés au démarrage.
 
-Pinecone (index dense existant, embeddings produits par OCR Pipe) :
+Pinecone (index dense existant, embeddings produits par Vector Hub) :
 
 ```powershell
 $env:REMOTE_VECTOR_PROVIDER = "pinecone"
 $env:PINECONE_API_KEY = "..."
 $env:PINECONE_INDEX_HOST = "https://votre-index.svc.pinecone.io"
-$env:PINECONE_NAMESPACE = "ocr-pipe-experiments-v1"
+$env:PINECONE_NAMESPACE = "vector-hub-experiments-v1"
 ```
 
 Qdrant :
@@ -60,7 +60,7 @@ Qdrant :
 $env:REMOTE_VECTOR_PROVIDER = "qdrant"
 $env:QDRANT_URL = "https://votre-instance-qdrant"
 $env:QDRANT_API_KEY = "..."
-$env:QDRANT_COLLECTION = "ocr-pipe-experiments-v1"
+$env:QDRANT_COLLECTION = "vector-hub-experiments-v1"
 ```
 
 La collection Qdrant est créée au premier envoi. L'index Pinecone doit déjà
@@ -69,7 +69,7 @@ upserts idempotents et leur hash est suivi séparément pour chaque fournisseur,
 index et namespace ; une modification ne déclenche jamais de synchronisation
 distante implicite.
 
-La base SQLite est créée dans `data/ocr_pipe.db`. Les changements de schéma
+La base SQLite est créée dans `data/vector_hub.db`. Les changements de schéma
 sont versionnés dans `database/migrations/` et appliqués automatiquement au
 démarrage. Les anciens JSON présents dans `DATA/extracted/` ou
 `data/extracted/` sont importés automatiquement s'ils existent encore.

@@ -1,4 +1,4 @@
-# Guide de reprise — OCR Pipe
+# Guide de reprise — Vector Hub
 
 Ce fichier est destiné aux futurs agents qui interviennent sur ce dépôt. Lire
 également `README.md` avant une modification importante.
@@ -115,7 +115,7 @@ fonctionnalité est ajoutée, et ne doit pas diminuer sans justification.
 - Les routes HTTP mettent les traitements longs en file ; elles ne les
   exécutent pas dans Flask.
 - En usage local standard, un thread worker embarqué démarre à la première
-  requête HTTP. `OCR_PIPE_AUTO_WORKER=0` permet de le désactiver au profit du
+  requête HTTP. `VECTOR_HUB_AUTO_WORKER=0` permet de le désactiver au profit du
   processus `python -m workers`.
 - `workers` revendique atomiquement les jobs persistés.
 - L'annulation d'un job actif est coopérative aux points de progression.
@@ -137,7 +137,7 @@ Après toute évolution de schéma :
 4. mettre à jour l'assertion des versions dans `tests/test_pipeline.py` ;
 5. lancer la suite complète.
 
-La base réelle est `data/ocr_pipe.db`. Le contenu de `data/` est ignoré par
+La base réelle est `data/vector_hub.db`. Le contenu de `data/` est ignoré par
 Git, à l'exception de son `.gitignore`.
 
 ## OpenAI, OCR et confidentialité
