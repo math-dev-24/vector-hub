@@ -1,6 +1,6 @@
 <!doctype html><html lang="fr"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="csrf-token" content="{{ csrf_token() }}"><title>{{ document.filename }} · OCR Pipe</title><link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}"><title>{{ document.filename }} · Vector Hub</title><link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head><body>
 {% set ready_chunks = document.chunks|selectattr('embedding_status', 'equalto', 'ready')|list %}
 <header class="app-header"><div class="app-header-inner max-w-6xl">

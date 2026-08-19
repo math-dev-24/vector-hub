@@ -1,10 +1,10 @@
 <!doctype html><html lang="fr"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="csrf-token" content="{{ csrf_token() }}"><title>Documents · OCR Pipe</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}"><title>Documents · Vector Hub</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head><body>
 <header class="app-header"><div class="app-header-inner">
-  <a href="{{ url_for('documents.index') }}" class="brand"><span class="brand-mark">OP</span><span><strong class="brand-title">OCR Pipe</strong><span class="brand-subtitle">Documents & RAG</span></span></a>
+  <a href="{{ url_for('documents.index') }}" class="brand"><span class="brand-mark">VH</span><span><strong class="brand-title">Vector Hub</strong><span class="brand-subtitle">Documents & RAG</span></span></a>
   <nav class="toolbar"><a href="{{ url_for('rag.lab') }}" class="tooltip icon-button" data-tooltip="Tester le RAG" aria-label="Tester le RAG"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" class="size-4"><circle cx="8" cy="8" r="4"/><path d="m11 11 4 4"/></svg></a><a href="{{ url_for('jobs.activity') }}" class="tooltip icon-button" data-tooltip="Voir l’activité" aria-label="Voir l’activité"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h3l2-5 4 10 2-5h3"/></svg></a></nav>
 </div></header>
 
