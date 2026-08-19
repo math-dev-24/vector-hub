@@ -15,3 +15,5 @@ wheels/
 # Frontend dependencies
 node_modules/
 .env
+.uv.lock
+.package-lock.json
