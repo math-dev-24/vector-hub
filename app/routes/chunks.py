@@ -110,6 +110,20 @@ def vectorize_all():
     return redirect(url_for("documents.index"))
 
 
+@chunks.post("/documents/<document_id>/publish-vectors")
+def publish_vectors(document_id: str):
+    publication_service = current_app.extensions["publication_service"]
+    if not publication_service.configured:
+        flash("Configurez une base vectorielle distante avant de publier.", "error")
+    else:
+        enqueue("publish_document", document_id)
+        flash(
+            f"Publication vers {publication_service.display_name} placée dans la file.",
+            "success",
+        )
+    return redirect(url_for("documents.review", document_id=document_id, tab="chunks"))
+
+
 @chunks.get("/documents/<document_id>/export.jsonl")
 def export_jsonl(document_id: str):
     stream, filename = current_app.extensions["export_service"].rag_jsonl(document_id)

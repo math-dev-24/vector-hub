@@ -19,12 +19,14 @@ class JobCancelled(Exception):
 
 class JobService:
     def __init__(self, repository: SQLiteJobRepository, chunks: ChunkService,
-                 activity: SQLiteActivityRepository, ocr_service=None, correction_service=None):
+                 activity: SQLiteActivityRepository, ocr_service=None, correction_service=None,
+                 publication_service=None):
         self.repository = repository
         self.chunks = chunks
         self.activity = activity
         self.ocr_service = ocr_service
         self.correction_service = correction_service
+        self.publication_service = publication_service
 
     def enqueue(self, job_type: str, *, document_id: str | None = None,
                 chunk_id: str | None = None, payload: dict | None = None) -> JobModel:
@@ -95,6 +97,10 @@ class JobService:
         if job.job_type == "vectorize_all":
             documents, chunks = self.chunks.vectorize_all(on_progress=progress)
             return {"documents": documents, "chunks": chunks}
+        if job.job_type == "publish_document" and self.publication_service:
+            return {"chunks": self.publication_service.publish_document(
+                job.document_id, on_progress=progress
+            )}
         if job.job_type == "ocr_document" and self.ocr_service:
             return self.ocr_service.process_document(job.document_id, on_progress=progress)
         if job.job_type == "correct_document_ai" and self.correction_service:
@@ -119,5 +125,7 @@ class JobService:
         if isinstance(error, RuntimeError) and "OPENAI_API_KEY" in str(error):
             return "La clé OpenAI n'est pas configurée."
         if "Tesseract" in str(error):
+            return str(error)
+        if "Qdrant" in str(error) or "Pinecone" in str(error) or "vectorielle distante" in str(error):
             return str(error)
         return "Le traitement a échoué. Consultez les logs du serveur."

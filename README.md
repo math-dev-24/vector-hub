@@ -40,6 +40,35 @@ $env:OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 $env:FLASK_SECRET_KEY = "une-valeur-secrete"
 ```
 
+## Publication vers une base vectorielle distante
+
+SQLite reste la source locale de vérité. Le port de publication accepte des
+adaptateurs Pinecone et Qdrant, sélectionnés au démarrage.
+
+Pinecone (index dense existant, embeddings produits par OCR Pipe) :
+
+```powershell
+$env:REMOTE_VECTOR_PROVIDER = "pinecone"
+$env:PINECONE_API_KEY = "..."
+$env:PINECONE_INDEX_HOST = "https://votre-index.svc.pinecone.io"
+$env:PINECONE_NAMESPACE = "ocr-pipe-experiments-v1"
+```
+
+Qdrant :
+
+```powershell
+$env:REMOTE_VECTOR_PROVIDER = "qdrant"
+$env:QDRANT_URL = "https://votre-instance-qdrant"
+$env:QDRANT_API_KEY = "..."
+$env:QDRANT_COLLECTION = "ocr-pipe-experiments-v1"
+```
+
+La collection Qdrant est créée au premier envoi. L'index Pinecone doit déjà
+exister avec la dimension du modèle OpenAI utilisé. Les publications sont des
+upserts idempotents et leur hash est suivi séparément pour chaque fournisseur,
+index et namespace ; une modification ne déclenche jamais de synchronisation
+distante implicite.
+
 La base SQLite est créée dans `data/ocr_pipe.db`. Les changements de schéma
 sont versionnés dans `database/migrations/` et appliqués automatiquement au
 démarrage. Les anciens JSON présents dans `DATA/extracted/` ou

@@ -41,7 +41,7 @@ class PipelineTest(unittest.TestCase):
             versions = [row[0] for row in connection.execute(
                 "SELECT version FROM schema_migrations ORDER BY version"
             )]
-        self.assertEqual(versions, ["001", "002", "003", "004", "005", "006"])
+        self.assertEqual(versions, ["001", "002", "003", "004", "005", "006", "007"])
 
     def test_chunk_can_span_pages(self):
         chunks = ChunkingService().generate(self.document)

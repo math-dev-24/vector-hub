@@ -12,7 +12,8 @@ from flask_wtf.csrf import CSRFError, CSRFProtect
 
 from app.config import Config
 
-from repositories import SQLiteActivityRepository, SQLiteDocumentRepository, SQLiteJobRepository, SQLiteVectorRepository
+from repositories import (SQLiteActivityRepository, SQLiteDocumentRepository, SQLiteJobRepository,
+                          SQLiteRemotePublicationRepository, SQLiteVectorRepository)
 from services.chunk_service import ChunkService
 from services.document_service import DocumentService
 from services.job_service import JobService
@@ -20,6 +21,9 @@ from services.export_service import ExportService
 from services.ocr_service import OCRService
 from services.search_service import SearchService
 from services.openai_page_correction_service import OpenAIPageCorrectionService
+from services.qdrant_client import QdrantClient
+from services.pinecone_client import PineconeClient
+from services.remote_vector_publication_service import RemoteVectorPublicationService
 
 
 def create_app(data_dir: Path | None = None) -> Flask:
@@ -44,12 +48,35 @@ def create_app(data_dir: Path | None = None) -> Flask:
     vector_repository = SQLiteVectorRepository(data_dir / "ocr_pipe.db")
     job_repository = SQLiteJobRepository(data_dir / "ocr_pipe.db")
     activity_repository = SQLiteActivityRepository(data_dir / "ocr_pipe.db")
+    publication_repository = SQLiteRemotePublicationRepository(data_dir / "ocr_pipe.db")
     document_service = DocumentService(repository, data_dir)
     chunk_service = ChunkService(repository, vector_repository)
     ocr_service = OCRService(repository)
     correction_service = OpenAIPageCorrectionService(repository)
+    qdrant_url = os.environ.get("QDRANT_URL", "").strip()
+    pinecone_host = os.environ.get("PINECONE_INDEX_HOST", "").strip()
+    provider = os.environ.get("REMOTE_VECTOR_PROVIDER", "").strip().lower()
+    provider = provider or ("pinecone" if pinecone_host else "qdrant" if qdrant_url else "")
+    gateway, destination, display_name = None, "remote:unconfigured", "Non configuré"
+    pinecone_api_key = os.environ.get("PINECONE_API_KEY", "").strip()
+    if provider == "pinecone" and pinecone_host and pinecone_api_key:
+        namespace = os.environ.get("PINECONE_NAMESPACE", "ocr-pipe-experiments-v1")
+        gateway = PineconeClient(
+            pinecone_host, pinecone_api_key, namespace
+        )
+        destination = f"pinecone:{pinecone_host}:{namespace}"
+        display_name = f"Pinecone · {namespace or 'namespace par défaut'}"
+    elif provider == "qdrant" and qdrant_url:
+        collection = os.environ.get("QDRANT_COLLECTION", "ocr-pipe-experiments-v1")
+        gateway = QdrantClient(qdrant_url, collection, os.environ.get("QDRANT_API_KEY", ""))
+        destination = f"qdrant:{qdrant_url}:{collection}"
+        display_name = f"Qdrant · {collection}"
+    publication_service = RemoteVectorPublicationService(
+        repository, vector_repository, publication_repository, gateway,
+        destination=destination, display_name=display_name,
+    )
     job_service = JobService(job_repository, chunk_service, activity_repository, ocr_service,
-                             correction_service)
+                             correction_service, publication_service)
     export_service = ExportService(repository)
     search_service = SearchService(vector_repository)
     if data_dir == base_dir / "data":
@@ -69,6 +96,8 @@ def create_app(data_dir: Path | None = None) -> Flask:
     app.extensions["ocr_service"] = ocr_service
     app.extensions["search_service"] = search_service
     app.extensions["correction_service"] = correction_service
+    app.extensions["publication_repository"] = publication_repository
+    app.extensions["publication_service"] = publication_service
 
     # En usage local, éviter que les jobs restent bloqués si l'utilisateur ne
     # pense pas à lancer un second terminal. Le démarrage au premier HTTP évite

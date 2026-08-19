@@ -39,6 +39,20 @@ class SQLiteVectorRepository:
             ).fetchone()
             return row["input_hash"] if row else None
 
+    def get(self, chunk_id: str) -> dict | None:
+        with self.database._connect() as connection:
+            row = connection.execute(
+                """SELECT chunk_id, model, input_hash, dimensions, embedding_json
+                   FROM chunk_embeddings WHERE chunk_id=?""", (chunk_id,)
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "chunk_id": row["chunk_id"], "model": row["model"],
+            "input_hash": row["input_hash"], "dimensions": row["dimensions"],
+            "embedding": json.loads(row["embedding_json"]),
+        }
+
     def search(self, query_embedding: list[float], *, document_id: str | None = None,
                limit: int = 8) -> list[dict]:
         query = """SELECT e.embedding_json, e.model, c.id AS chunk_id, c.document_id,

@@ -65,6 +65,7 @@ def review(document_id: str):
     except KeyError:
         flash("Document introuvable.", "error")
         return redirect(url_for("documents.index"))
+    publication_service = current_app.extensions["publication_service"]
     return render_template(
         "review.html", document=document, active_tab=request.args.get("tab", "pages"),
         jobs=current_app.extensions["job_repository"].list_recent(document_id, limit=5),
@@ -72,6 +73,11 @@ def review(document_id: str):
         preprocessing_rules=service().preprocessor.RULES,
         selected_preprocessing_rules=service().preprocessor.DEFAULT_RULES,
         preprocessing_preview=False,
+        remote_vectors_configured=publication_service.configured,
+        remote_collection=publication_service.display_name,
+        publication_summary=current_app.extensions["publication_repository"].summary(
+            document_id, publication_service.collection
+        ),
     )
 
 
@@ -103,6 +109,11 @@ def preview_preprocessing(document_id: str):
         preprocessing_rules=service().preprocessor.RULES,
         selected_preprocessing_rules=result.applied_rules,
         preprocessing_preview=True,
+        remote_vectors_configured=current_app.extensions["publication_service"].configured,
+        remote_collection=current_app.extensions["publication_service"].display_name,
+        publication_summary=current_app.extensions["publication_repository"].summary(
+            document_id, current_app.extensions["publication_service"].collection
+        ),
     )
 
 

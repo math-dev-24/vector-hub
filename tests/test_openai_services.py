@@ -7,11 +7,13 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from models.document_model import ChunkModel, DocumentModel, PageModel
-from repositories import SQLiteActivityRepository, SQLiteDocumentRepository, SQLiteJobRepository
+from repositories import (SQLiteActivityRepository, SQLiteDocumentRepository, SQLiteJobRepository,
+                          SQLiteRemotePublicationRepository, SQLiteVectorRepository)
 from services.job_service import JobService
 from services.openai_metadata_service import GeneratedChunkMetadata, OpenAIMetadataService
 from services.vectorization_service import VectorizationService
 from services.openai_page_correction_service import CorrectedPage, OpenAIPageCorrectionService
+from services.remote_vector_publication_service import RemoteVectorPublicationService
 
 
 class MetadataServiceTest(unittest.TestCase):
@@ -88,6 +90,32 @@ class JobServiceTest(unittest.TestCase):
             self.assertTrue(service.cancel(job.id))
             self.assertEqual(jobs.get(job.id).status, "cancelled")
             self.assertFalse(service.run_next("test-worker"))
+
+
+class RemoteVectorPublicationServiceTest(unittest.TestCase):
+    def test_publishes_ready_chunks_and_skips_unchanged_vectors(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database_path = Path(directory) / "publish.db"
+            documents = SQLiteDocumentRepository(database_path)
+            vectors = SQLiteVectorRepository(database_path)
+            publications = SQLiteRemotePublicationRepository(database_path)
+            chunk = ChunkModel(
+                id=str(uuid.uuid4()), document_id="d1", position=0, text="Texte propre",
+                embedding_status="ready",
+            )
+            documents.save(DocumentModel(id="d1", filename="test.pdf", chunks=[chunk]))
+            vectors.save(chunk.id, "embedding-test", "hash-1", [0.1, 0.2])
+            client = Mock()
+            service = RemoteVectorPublicationService(documents, vectors, publications, client)
+
+            self.assertEqual(service.publish_document("d1"), 1)
+            self.assertEqual(service.publish_document("d1"), 0)
+            client.ensure_target.assert_called_once_with(2)
+            client.upsert.assert_called_once()
+            point = client.upsert.call_args.args[0][0]
+            self.assertEqual(point["id"], chunk.id)
+            self.assertEqual(point["metadata"]["text"], "Texte propre")
+            self.assertEqual(publications.summary("d1", service.collection)["published"], 1)
 
 
 if __name__ == "__main__":
