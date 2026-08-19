@@ -44,11 +44,12 @@ def create_app(data_dir: Path | None = None) -> Flask:
     def handle_csrf_error(error):
         return "Le formulaire a expiré. Rechargez la page et réessayez.", 400
 
-    repository = SQLiteDocumentRepository(data_dir / "ocr_pipe.db")
-    vector_repository = SQLiteVectorRepository(data_dir / "ocr_pipe.db")
-    job_repository = SQLiteJobRepository(data_dir / "ocr_pipe.db")
-    activity_repository = SQLiteActivityRepository(data_dir / "ocr_pipe.db")
-    publication_repository = SQLiteRemotePublicationRepository(data_dir / "ocr_pipe.db")
+    database_path = data_dir / "vector_hub.db"
+    repository = SQLiteDocumentRepository(database_path)
+    vector_repository = SQLiteVectorRepository(database_path)
+    job_repository = SQLiteJobRepository(database_path)
+    activity_repository = SQLiteActivityRepository(database_path)
+    publication_repository = SQLiteRemotePublicationRepository(database_path)
     document_service = DocumentService(repository, data_dir)
     chunk_service = ChunkService(repository, vector_repository)
     ocr_service = OCRService(repository)
@@ -60,14 +61,14 @@ def create_app(data_dir: Path | None = None) -> Flask:
     gateway, destination, display_name = None, "remote:unconfigured", "Non configuré"
     pinecone_api_key = os.environ.get("PINECONE_API_KEY", "").strip()
     if provider == "pinecone" and pinecone_host and pinecone_api_key:
-        namespace = os.environ.get("PINECONE_NAMESPACE", "ocr-pipe-experiments-v1")
+        namespace = os.environ.get("PINECONE_NAMESPACE", "vector-hub-experiments-v1")
         gateway = PineconeClient(
             pinecone_host, pinecone_api_key, namespace
         )
         destination = f"pinecone:{pinecone_host}:{namespace}"
         display_name = f"Pinecone · {namespace or 'namespace par défaut'}"
     elif provider == "qdrant" and qdrant_url:
-        collection = os.environ.get("QDRANT_COLLECTION", "ocr-pipe-experiments-v1")
+        collection = os.environ.get("QDRANT_COLLECTION", "vector-hub-experiments-v1")
         gateway = QdrantClient(qdrant_url, collection, os.environ.get("QDRANT_API_KEY", ""))
         destination = f"qdrant:{qdrant_url}:{collection}"
         display_name = f"Qdrant · {collection}"
@@ -102,7 +103,7 @@ def create_app(data_dir: Path | None = None) -> Flask:
     # En usage local, éviter que les jobs restent bloqués si l'utilisateur ne
     # pense pas à lancer un second terminal. Le démarrage au premier HTTP évite
     # les doublons créés par le reloader Flask et ne s'active pas dans les tests.
-    if is_local_default and os.environ.get("OCR_PIPE_AUTO_WORKER", "1") == "1":
+    if is_local_default and os.environ.get("VECTOR_HUB_AUTO_WORKER", "1") == "1":
         worker_started = threading.Event()
 
         def worker_loop():
@@ -116,7 +117,7 @@ def create_app(data_dir: Path | None = None) -> Flask:
             if not worker_started.is_set():
                 worker_started.set()
                 threading.Thread(
-                    target=worker_loop, name="ocr-pipe-local-worker", daemon=True
+                    target=worker_loop, name="vector-hub-local-worker", daemon=True
                 ).start()
 
     from app.routes.documents import documents

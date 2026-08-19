@@ -9,7 +9,7 @@ from app import create_app
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Worker local OCR Pipe")
+    parser = argparse.ArgumentParser(description="Worker local Vector Hub")
     parser.add_argument("--once", action="store_true", help="Traite au plus un job puis s'arrête")
     parser.add_argument("--poll", type=float, default=1.0, help="Intervalle de polling en secondes")
     args = parser.parse_args()

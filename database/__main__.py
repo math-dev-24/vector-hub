@@ -8,9 +8,9 @@ from database import run_migrations
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Gestion du schéma SQLite OCR Pipe")
+    parser = argparse.ArgumentParser(description="Gestion du schéma SQLite Vector Hub")
     parser.add_argument("command", choices=["migrate", "status"])
-    parser.add_argument("--database", type=Path, default=Path("data/ocr_pipe.db"))
+    parser.add_argument("--database", type=Path, default=Path("data/vector_hub.db"))
     args = parser.parse_args()
 
     if args.command == "migrate":

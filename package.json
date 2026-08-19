@@ -1,5 +1,5 @@
 {
-  "name": "ocr-pipe-ui",
+  "name": "vector-hub-ui",
   "private": true,
   "scripts": {
     "css:build": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/main.css --minify",

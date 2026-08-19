@@ -68,7 +68,7 @@ def activity():
             "chunks": sum(item.chunks_count for item in documents),
             "database_mb": round(database_path.stat().st_size / 1024 / 1024, 2),
             "openai": bool(os.environ.get("OPENAI_API_KEY")),
-            "workers": int(os.environ.get("OCR_PIPE_WORKERS", "2")),
+            "workers": int(os.environ.get("VECTOR_HUB_WORKERS", "2")),
             "ocr": current_app.extensions["ocr_service"].is_available(),
         },
     )
