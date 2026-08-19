@@ -1,0 +1,12 @@
+{
+  "name": "ocr-pipe-ui",
+  "private": true,
+  "scripts": {
+    "css:build": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/main.css --minify",
+    "css:watch": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/main.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}
